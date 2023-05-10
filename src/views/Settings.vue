@@ -1,29 +1,25 @@
 <template>
-    <div class="main flex">
+    <div class="page settings-page">
         <div class="right">
             <Agents/>
             <div class="bottom-panel">
-                <router-link to="/settings">Settings</router-link>
+                <router-link to="/">Home</router-link>
             </div>
         </div>
-        <div class="body flex-grow">
-            <InputApiKey/>
-            <Agent/>
+        <div class="body">
+            <Settings/>
         </div>
     </div>
 </template>
 
 <script lang='ts'>
     import { defineComponent } from 'vue'
-    import Agents from '@/components/Agents.vue'
-    import Agent from '@/components/Agent.vue'
-    import InputApiKey from '@/components/misc/InputApiKey.vue'
+    import Settings from '@/components/partials/Settings.vue'
 
     export default defineComponent({
         components: {
-            Agent,
-            Agents,
-            InputApiKey
+            Settings,
+
         },
         data() {
             return {
@@ -38,7 +34,7 @@
         },
     })
 
-  </script>
+    </script>
 
 <style lang="scss" scoped>
 

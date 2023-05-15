@@ -1,13 +1,15 @@
 <template>
-    <div class="agents">
+    <div class="agents w-full">
         <List :items="$root.agents">
             <template #default="{item}">
-                <router-link :to="'/agents/' + item.id">{{ item.name }}</router-link>
+                <router-link :to="'/agents/' + item.id" class="mt-1">{{ item.name }}</router-link>
             </template>
             <template #add>
-                <InputText :label="'Name: '"  v-model:value="name"/>
-                <InputTextarea :label="'Goal: '"  v-model:value="goal"/>
-                <button @click="add" >Add</button>
+                <div class="flex flex-col w-full mb-4">
+                    <InputText class="w-full"  :label="'Name: '"  v-model:value="name"/>
+                    <InputTextarea class="w-full" :label="'Goal: '"  v-model:value="goal" v-if="name"/>
+                    <button @click="add" class="py-1 px-4 bg-yellow-900 rounded mt-2" >Add</button>
+                </div>
             </template>
         </List>
     </div>
@@ -44,7 +46,8 @@
         methods: {
             add() {
                 const agent = addAgent({ name: this.name, goal: this.goal, id: '-1', state: 'pending' })
-                addMessage(agent.id, { message: 'Agent added' })
+                addMessage(agent.id, { message: 'Agent added', date: +new Date() })
+                this.$root.agents.push(agent)
                 // const agent = new AutonomousAgent(
                 //     this.name.trim(),
                 //     this.goal.trim(),

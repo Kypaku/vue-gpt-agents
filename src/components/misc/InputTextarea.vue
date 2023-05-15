@@ -1,9 +1,11 @@
 <template>
     <div class="input-textarea p-0">
-        <label :for="id" class="mr-2" v-if="label">{{label}}</label>
+        <div>
+            <label :for="id" class="mr-2" v-if="label">{{label}}</label>
+        </div>
         <textarea
             type="text"
-            class="border-2 rounded p-1"
+            class="border-2 rounded p-1  bg-gray-700"
             ref="input"
             :id="id"
             :value="value"

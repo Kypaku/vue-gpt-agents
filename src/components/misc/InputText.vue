@@ -6,7 +6,7 @@
         <div class="text-left">
             <input
                 type="text"
-                class="border-2 ym-disable-keys text-sm py-1 px-2 rounded"
+                class="border-2 ym-disable-keys text-sm py-1 px-2 rounded bg-gray-700"
                 :class="{error}"
                 ref="input"
                 :id="id"

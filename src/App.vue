@@ -1,5 +1,5 @@
 <template>
-    <div class="app">
+    <div class="app text-white">
         <TheHeader/>
         <router-view></router-view>
         <TheFooter/>
@@ -7,6 +7,7 @@
 </template>
 
 <script lang='ts'>
+    import {update} from 'lodash'
     import { defineComponent } from 'vue'
     import TheHeader from '@/components/partials/TheHeader.vue'
     import TheFooter from '@/components/partials/TheFooter.vue'
@@ -28,15 +29,20 @@
 
         },
         methods: {
-
+            updateAgents() {
+                this.agents = getAgents()
+            },
         },
         created() {
-            this.agents = getAgents()
+            this.updateAgents()
         },
     })
 
   </script>
 
 <style lang="scss" scoped>
+    .app{
+        height: 100vh;
+    }
 
 </style>

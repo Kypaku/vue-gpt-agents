@@ -1,6 +1,6 @@
 <template>
     <div class="list-comp flex flex-col items-center">
-        <div class="list-add-wrapper" v-if="$slots.add" v-show="!hideTopAdd">
+        <div class="list-add-wrapper w-full" v-if="$slots.add" v-show="!hideTopAdd">
             <slot name="add" :add="val => $emit('add', {name: val, pos: 0})" :index="0"/>
         </div>
         <ListAdd

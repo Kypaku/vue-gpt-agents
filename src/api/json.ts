@@ -32,7 +32,7 @@ export function getAgents(): Agent[] {
     return readFileJSON(agentsFile)
 }
 
-export function addMessage(agentId: string, messageObj: {message: string}) {
+export function addMessage(agentId: string, messageObj: any) {
     appendFileJSON(path.resolve(agentsDir, agentId + '.jsonlines'), messageObj)
 }
 

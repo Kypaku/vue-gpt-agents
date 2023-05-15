@@ -1,12 +1,12 @@
 <template>
-    <div class="main flex">
-        <div class="right">
-            <Agents/>
+    <div class="main flex h-full">
+        <div class="right bg-gray-900 p-2 flex flex-col">
+            <Agents class="flex-grow" />
             <div class="bottom-panel">
                 <router-link to="/settings">Settings</router-link>
             </div>
         </div>
-        <div class="body flex-grow">
+        <div class="body flex-grow bg-gray-800 p-2">
             <InputApiKey/>
             <Agent/>
         </div>
@@ -41,5 +41,8 @@
   </script>
 
 <style lang="scss" scoped>
+    .right{
+        width: 300px;
+    }
 
 </style>

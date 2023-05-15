@@ -19,7 +19,7 @@ class AutonomousAgent {
   tasks: string[] = [];
   completedTasks: string[] = [];
   modelSettings: ModelSettings;
-  isRunning = true;
+  isRunning = false;
   renderMessage: (message: Message) => void;
   shutdown: () => void;
   numLoops = 0;
@@ -49,6 +49,7 @@ class AutonomousAgent {
           this.stopAgent()
           return
       }
+      this.isRunning = true
 
       this.sendGoalMessage()
       this.sendThinkingMessage()

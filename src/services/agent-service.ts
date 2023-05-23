@@ -7,8 +7,9 @@ import {
 import type { ModelSettings } from "../utils/types"
 import { LLMChain } from "langchain/chains"
 import { extractTasks } from "../utils/helpers"
+import { ITask } from "@/types"
 
-async function startGoalAgent(modelSettings: ModelSettings, goal: string) {
+async function startGoalAgent(modelSettings: ModelSettings, goal: string): Promise<ITask[]> {
     const completion = await new LLMChain({
         llm: createModel(modelSettings),
         prompt: startGoalPrompt,
@@ -17,20 +18,25 @@ async function startGoalAgent(modelSettings: ModelSettings, goal: string) {
         customLanguage: modelSettings.customLanguage,
     })
     console.log("Completion:" + (completion.text as string))
-    return extractTasks(completion.text as string, [])
+    return extractTasks(completion.text as string, []).map((stringOne) => {
+        return {
+            content: stringOne,
+            created: new Date().toISOString(),
+        }
+    })
 }
 
 async function executeTaskAgent(
     modelSettings: ModelSettings,
     goal: string,
-    task: string
+    task: ITask
 ) {
     const completion = await new LLMChain({
         llm: createModel(modelSettings),
         prompt: executeTaskPrompt,
     }).call({
         goal,
-        task,
+        task: task.content,
         customLanguage: modelSettings.customLanguage,
     })
 
@@ -40,8 +46,8 @@ async function executeTaskAgent(
 async function createTasksAgent(
     modelSettings: ModelSettings,
     goal: string,
-    tasks: string[],
-    lastTask: string,
+    tasks: ITask[],
+    lastTask: ITask,
     result: string,
     completedTasks: string[] | undefined
 ) {
@@ -50,64 +56,44 @@ async function createTasksAgent(
         prompt: createTasksPrompt,
     }).call({
         goal,
-        tasks,
-        lastTask,
+        tasks: tasks.map((task) => task.content),
+        lastTask: lastTask.content,
         result,
         customLanguage: modelSettings.customLanguage,
     })
 
-    return extractTasks(completion.text as string, completedTasks || [])
+    return extractTasks(completion.text as string, completedTasks || []).map((stringOne) => {
+        return {
+            content: stringOne,
+            created: new Date().toISOString(),
+        }
+    })
 }
 
 interface AgentService {
   startGoalAgent: (
     modelSettings: ModelSettings,
     goal: string
-  ) => Promise<string[]>;
+  ) => Promise<ITask[]>;
   executeTaskAgent: (
     modelSettings: ModelSettings,
     goal: string,
-    task: string
+    task: ITask
   ) => Promise<string>;
   createTasksAgent: (
     modelSettings: ModelSettings,
     goal: string,
-    tasks: string[],
-    lastTask: string,
+    tasks: ITask[],
+    lastTask: ITask,
     result: string,
     completedTasks: string[] | undefined
-  ) => Promise<string[]>;
+  ) => Promise<ITask[]>;
 }
 
 const OpenAIAgentService: AgentService = {
     startGoalAgent: startGoalAgent,
     executeTaskAgent: executeTaskAgent,
     createTasksAgent: createTasksAgent,
-}
-
-const MockAgentService: AgentService = {
-    startGoalAgent: async (modelSettings, goal) => {
-        return await new Promise((resolve) => resolve(["Task 1"]))
-    },
-
-    createTasksAgent: async (
-        modelSettings: ModelSettings,
-        goal: string,
-        tasks: string[],
-        lastTask: string,
-        result: string,
-        completedTasks: string[] | undefined
-    ) => {
-        return await new Promise((resolve) => resolve(["Task 4"]))
-    },
-
-    executeTaskAgent: async (
-        modelSettings: ModelSettings,
-        goal: string,
-        task: string
-    ) => {
-        return await new Promise((resolve) => resolve("Result: " + task))
-    },
 }
 
 export default OpenAIAgentService

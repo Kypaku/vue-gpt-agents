@@ -1,14 +1,14 @@
 <template>
-    <div class="main flex h-full">
+    <div class="main flex">
         <div class="right bg-gray-900 p-2 flex flex-col">
             <Agents class="flex-grow" />
             <div class="bottom-panel">
                 <router-link to="/settings">Settings</router-link>
             </div>
         </div>
-        <div class="body flex-grow bg-gray-800 p-2">
+        <div class="body flex-grow bg-gray-800 p-3">
             <InputApiKey/>
-            <Agent/>
+            <Agent :key="$route.params.id" v-if="$route.params.id"/>
         </div>
     </div>
 </template>
@@ -41,8 +41,13 @@
   </script>
 
 <style lang="scss" scoped>
+    .main{
+        min-height: 100vh;
+    }
+
     .right{
         width: 300px;
+        min-width: 300px;
     }
 
 </style>

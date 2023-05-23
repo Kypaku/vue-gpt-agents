@@ -9,6 +9,8 @@ import {
 import type { Message } from "../types/agentTypes"
 import { v4 } from "uuid"
 import type { RequestBody } from "../utils/interfaces"
+import { updateAgent } from "@/api/json"
+import { Agent, ITask } from "@/types"
 
 const TIMEOUT_LONG = 1000
 const TIMOUT_SHORT = 800
@@ -16,7 +18,7 @@ const TIMOUT_SHORT = 800
 class AutonomousAgent {
   name: string;
   goal: string;
-  tasks: string[] = [];
+  tasks: ITask[] = [];
   completedTasks: string[] = [];
   modelSettings: ModelSettings;
   isRunning = false;
@@ -24,7 +26,9 @@ class AutonomousAgent {
   shutdown: () => void;
   numLoops = 0;
   _id: string;
+  id: string
   guestSettings: GuestSettings;
+  agent: Agent
   constructor(
       name: string,
       goal: string,
@@ -32,6 +36,7 @@ class AutonomousAgent {
       shutdown: () => void,
       modelSettings: ModelSettings,
       guestSettings: GuestSettings,
+      agent: Agent
   ) {
       this.name = name
       this.goal = goal
@@ -40,26 +45,32 @@ class AutonomousAgent {
       this.modelSettings = modelSettings
       this._id = v4()
       this.guestSettings = guestSettings
+      this.tasks = agent.tasks?.map((task) => task.content ? task : { content: task } as any) || []
+      this.agent = agent
   }
 
-  async run() {
+  async run(agent: Agent) {
       const { isGuestMode, isValidGuest } = this.guestSettings
       if (isGuestMode && !isValidGuest && !this.modelSettings.customApiKey) {
           this.sendErrorMessage("errors.invalid-guest-key")
           this.stopAgent()
           return
       }
+      this.id = agent.id
       this.isRunning = true
 
-      this.sendGoalMessage()
+      //   this.sendGoalMessage()
       this.sendThinkingMessage()
 
       // Initialize by getting tasks
       try {
-          this.tasks = await this.getInitialTasks()
+          if (!this.tasks?.length) {
+              this.tasks = await this.getInitialTasks()
+              this.saveTasks()
+          }
           for (const task of this.tasks) {
               await new Promise((resolve) => setTimeout(resolve, TIMOUT_SHORT))
-              this.sendTaskMessage(task)
+              this.sendTaskMessage(task.content)
           }
       } catch (e) {
           console.log(e)
@@ -69,6 +80,10 @@ class AutonomousAgent {
       }
 
       await this.loop()
+  }
+
+  saveTasks() {
+      updateAgent({ id: this.id, tasks: this.tasks })
   }
 
   async loop() {
@@ -98,11 +113,11 @@ class AutonomousAgent {
 
       // Execute first task
       // Get and remove first task
-      this.completedTasks.push(this.tasks[0] || "")
+      this.completedTasks.push(this.tasks[0]?.content || "")
       const currentTask = this.tasks.shift()
       this.sendThinkingMessage()
 
-      const result = await this.executeTask(currentTask as string)
+      const result = await this.executeTask(currentTask as ITask)
       this.sendExecutionMessage(currentTask as string, result)
 
       // Wait before adding tasks
@@ -112,22 +127,23 @@ class AutonomousAgent {
       // Add new tasks
       try {
           const newTasks = await this.getAdditionalTasks(
-        currentTask as string,
+        currentTask as ITask,
         result
           )
           this.tasks = newTasks.concat(this.tasks)
+          this.saveTasks()
           for (const task of newTasks) {
               await new Promise((r) => setTimeout(r, TIMOUT_SHORT))
-              this.sendTaskMessage(task)
+              this.sendTaskMessage(task.content)
           }
 
           if (newTasks.length == 0) {
-              this.sendActionMessage("task-marked-as-complete")
+              this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
           }
       } catch (e) {
           console.log(e)
           this.sendErrorMessage(`errors.adding-additional-task`)
-          this.sendActionMessage("task-marked-as-complete")
+          this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
       }
 
       await this.loop()
@@ -141,12 +157,8 @@ class AutonomousAgent {
           : defaultLoops
   }
 
-  async getInitialTasks(): Promise<string[]> {
+  async getInitialTasks(): Promise<ITask[]> {
       if (this.shouldRunClientSide()) {
-      // FIXME
-      // if (!env.NEXT_PUBLIC_FF_MOCK_MODE_ENABLED) {
-      //   await testConnection(this.modelSettings);
-      // }
           return await AgentService.startGoalAgent(this.modelSettings, this.goal)
       }
 
@@ -157,13 +169,13 @@ class AutonomousAgent {
       const res = await this.post(`/api/agent/start`, data)
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-argument
-      return res.data.newTasks as string[]
+      return res.data.newTasks as ITask[]
   }
 
   async getAdditionalTasks(
-      currentTask: string,
+      currentTask: ITask,
       result: string
-  ): Promise<string[]> {
+  ): Promise<ITask[]> {
       if (this.shouldRunClientSide()) {
           return await AgentService.createTasksAgent(
               this.modelSettings,
@@ -183,18 +195,35 @@ class AutonomousAgent {
           result: result,
           completedTasks: this.completedTasks,
       }
-      const res = await this.post(`/api/agent/create`, data)
+      //   const res = await this.post(`/api/agent/create`, data)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
-      return res.data.newTasks as string[]
+      //   return res.data.newTasks as ITask[]
   }
 
-  async executeTask(task: string): Promise<string> {
+  async handleTaskResult(task: ITask, taskResult: string) {
+      if (taskResult === 'NEED_FILE_SYSTEM') {
+
+      } else if (taskResult === 'NEED_FILE_CONTENT') {
+
+      } else if (taskResult === 'NEED_URL_CONTENT') {
+
+      } else if (!taskResult.indexOf('INPUT:')) {
+
+      } else {
+        //save task
+
+      }
+  }
+
+  async executeTask(task: ITask): Promise<string> {
       if (this.shouldRunClientSide()) {
-          return await AgentService.executeTaskAgent(
+          const taskResult = await AgentService.executeTaskAgent(
               this.modelSettings,
               this.goal,
               task
           )
+          this.handleTaskResult(task, taskResult)
+          return taskResult
       }
 
       const data = {
@@ -202,9 +231,9 @@ class AutonomousAgent {
           goal: this.goal,
           task: task,
       }
-      const res = await this.post("/api/agent/execute", data)
+      //   const res = await this.post("/api/agent/execute", data)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-argument
-      return res.data.response as string
+      //   return res.data.response as string
   }
 
   private async post(url: string, data: RequestBody) {
@@ -222,7 +251,7 @@ class AutonomousAgent {
   }
 
   private shouldRunClientSide() {
-      return !!this.modelSettings.customApiKey
+      return true //! !this.modelSettings.customApiKey
   }
 
   stopAgent() {
@@ -262,12 +291,12 @@ class AutonomousAgent {
   sendCompletedMessage() {
       this.sendMessage({
           type: "system",
-          value: "all-tasks-completed",
+          value: "All tasks completed!",
       })
   }
 
   sendThinkingMessage() {
-      this.sendMessage({ type: "thinking", value: "" })
+      this.sendMessage({ type: "thinking", value: "Thinking..." })
   }
 
   sendTaskMessage(task: string) {
@@ -286,7 +315,7 @@ class AutonomousAgent {
       })
   }
 
-  sendActionMessage(message: string) {
+  sendActionMessage(message: string, value?: string) {
       this.sendMessage({
           type: "action",
           info: message,

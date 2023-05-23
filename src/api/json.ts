@@ -1,5 +1,5 @@
 
-import { appendFileJSON, readFileJSON, readFileJSONLines, updateFileJSON } from '@/helpers/node_gm'
+import { appendFileJSON, readFileJSON, readFileJSONLines, updateFileJSON, writeFile } from '@/helpers/node_gm'
 import { Agent } from '@/types'
 import * as path from 'path'
 
@@ -33,9 +33,15 @@ export function getAgents(): Agent[] {
 }
 
 export function addMessage(agentId: string, messageObj: any) {
-    appendFileJSON(path.resolve(agentsDir, agentId + '.jsonlines'), messageObj)
+    appendFileJSON(path.resolve(agentsDir, agentId + '.jsonlines'), {time: +new Date(), ...messageObj})
 }
 
 export function getMessages(agentId: string): {message: string}[] {
     return readFileJSONLines(path.resolve(agentsDir, agentId + '.jsonlines'))?.filter(Boolean)
+}
+
+
+export function clearAgentMessages(agentId: string) {
+    const filePath = path.resolve(agentsDir, agentId + '.jsonlines')
+    writeFile(filePath, '')
 }

@@ -45,4 +45,18 @@
         height: 100vh;
     }
 
+
+</style>
+
+<style lang="scss">
+
+.flex-center{
+        display: flex;
+        align-items: center;
+    }
+    .flex-center-between{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
 </style>

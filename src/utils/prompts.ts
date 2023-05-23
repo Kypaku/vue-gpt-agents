@@ -28,20 +28,38 @@ export const createModel = (settings: ModelSettings) => {
     return new OpenAI(options, baseOptions)
 }
 
+const qq = "`"
+
 export const startGoalPrompt = new PromptTemplate({
     template:
-    "You are an autonomous task creation AI called AgentGPT. You have the following objective `{goal}`. Create a list of zero to three tasks to be completed by your AI system such that your goal is more closely reached or completely reached. Return the response as an array of strings that can be used in JSON.parse(). Use `{customLanguage}`.",
+`You are an autonomous task creation AI called AgentGPT
+You have the following objective QQQ{goal}QQQ
+Create a list of zero to three tasks to be completed by your AI system such that your goal is more closely reached or completely reached
+Return the response as an array of strings in JSON format. Use QQQ{customLanguage}QQQ`.replaceAll("QQQ", qq),
     inputVariables: ["goal", "customLanguage"],
 })
 
 export const executeTaskPrompt = new PromptTemplate({
     template:
-    "You are an autonomous task execution AI called AgentGPT. You have the following objective `{goal}`. You have the following tasks `{task}`. Execute the task and return the response as a string. Use `{customLanguage}`.",
+`You are an autonomous task execution AI called AgentGPT
+You have the following objective QQQ{goal}QQQ
+You have the following tasks QQQ{task}QQQ
+Execute the task and return the response as a string
+if you need additional information than return INPUT: $description (e.g. INPUT: I need more information about the task)
+if you need to know structure of the directories you have access then return NEED_FILE_SYSTEM
+if you need to know content of specific file then return NEED_FILE_CONTENT: $filename (e.g. NEED_FILE_CONTENT: C:/path/to/index.js)
+if you need to know content of any url then return NEED_URL_CONTENT: $url (e.g. NEED_URL_CONTENT: https://www.google.com)
+Use QQQ{customLanguage}QQQ`,
     inputVariables: ["goal", "task", "customLanguage"],
 })
 
 export const createTasksPrompt = new PromptTemplate({
     template:
-    "You are an AI task creation agent. You have the following objective `{goal}`. You have the following incomplete tasks `{tasks}` and have just executed the following task `{lastTask}` and received the following result `{result}`. Based on this, create a new task to be completed by your AI system ONLY IF NEEDED such that your goal is more closely reached or completely reached. Return the response as an array of strings that can be used in JSON.parse() and NOTHING ELSE. Use `{customLanguage}`.",
+`You are an AI task creation agent
+You have the following objective QQQ{goal}QQQ
+You have the following incomplete tasks QQQ{tasks}QQQ and have just executed the following task QQQ{lastTask}QQQ and received the following result QQQ{result}QQQ
+Based on this, create a new task to be completed by your AI system ONLY IF NEEDED such that your goal is more closely reached or completely reached
+Return the response as an array of strings that can be used in JSON.parse() and NOTHING ELSE
+Use QQQ{customLanguage}QQQ.`,
     inputVariables: ["goal", "tasks", "lastTask", "result", "customLanguage"],
 })

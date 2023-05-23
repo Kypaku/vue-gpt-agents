@@ -25,4 +25,8 @@ pnpm-debug.log*
 #Electron-builder output
 /dist_electron
 db
+/db
+db/agents.json
+/db/agents.json
 
+db/agents.json

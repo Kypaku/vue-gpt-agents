@@ -3,7 +3,8 @@
         <List :items="$root.agents" @select="item => $router.push('/agents/' + item.id)">
             <template #default="{item}">
                 <div @click="$router.push('/agents/' + item.id)" :class="{active: item.id === $route.params.id}">
-                    <router-link :to="'/agents/' + item.id" class="mt-1">{{ item.name }}</router-link>
+                    <router-link :to="'/agents/' + item.id" class="mt-1mr-2">{{ item.name }}</router-link>
+                    <button @click.stop="toggleAgentState(item)" class="py-1 px-2 bg-blue-800 toggle-button text-sm rounded mt-2 ml-2">{{ item.state !== 'running' ? '▶️' : '⏹️' }}</button>
                 </div>
             </template>
             <template #add>
@@ -24,7 +25,7 @@
 <script lang='ts'>
     import { defineComponent, PropType } from 'vue'
     import List from './misc/list/List.vue'
-    import { addAgent, addMessage } from '@/api/json'
+    import { addAgent, addMessage, updateAgent } from '@/api/json'
     import InputText from './misc/InputText.vue'
     import InputTextarea from './misc/InputTextarea.vue'
     import AutonomousAgent from '@/models/AutonomousAgent'
@@ -64,13 +65,37 @@
                 //     session ?? undefined
                 // )
             },
-
+            toggleAgentState(agent) {
+                if (agent.state === 'running') {
+                    // Stop the agent
+                    agent.agentInstance.stopAgent()
+                    this.updateAgent(agent.id, 'state', 'stopped')
+                } else {
+                    // Run the agent
+                    agent.agentInstance.run(agent)
+                    this.updateAgent(agent.id, 'state', 'running')
+                }
+            },
+            updateAgent(id, field, val) {
+                this.$root.agents.forEach((a) => {
+                    if (a.id === id) {
+                        a[field] = val
+                        updateAgent({ id: id, [field]: val })
+                    }
+                    return a
+                })
+            },
         },
     })
 
     </script>
 
 <style lang="scss" scoped>
+    .toggle-button{
+        // filter: grayscale(1);
+        // opacity: 0.7;
+    }
+
     .active{
         color: #d2692d;
     font-weight: 700;

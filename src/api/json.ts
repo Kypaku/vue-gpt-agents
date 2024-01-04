@@ -1,15 +1,15 @@
 
 import { appendFileJSON, readFileJSON, readFileJSONLines, updateFileJSON, writeFile } from '@/helpers/node_gm'
-import { Agent } from '@/types'
+import { IAgent } from '@/types'
 import * as path from 'path'
 
 export const DB_DIR = path.resolve(__dirname, '..', '..', '..', '..', '..', '..', 'db')
 export const agentsFile = path.resolve(DB_DIR, 'agents.json')
 export const agentsDir = path.resolve(DB_DIR, 'agents')
 
-export function addAgent(agent: Agent): Agent {
+export function addAgent(agent: IAgent): IAgent {
     const newAgent = {...agent, id: Math.random() + '' + +new Date()}
-    updateFileJSON(agentsFile, (agents: Agent[]) => {
+    updateFileJSON(agentsFile, (agents: IAgent[]) => {
         agents.push(newAgent)
         return agents
     })
@@ -17,18 +17,18 @@ export function addAgent(agent: Agent): Agent {
 }
 
 export function delAgent(id: string) {
-    updateFileJSON(agentsFile, (agents: Agent[]) => {
+    updateFileJSON(agentsFile, (agents: IAgent[]) => {
         return agents.filter(agent => agent.id !== id)
     })
 }
 
-export function updateAgent(agent: Partial<Agent>) {
-    updateFileJSON(agentsFile, (agents: Agent[]) => {
+export function updateAgent(agent: Partial<IAgent>) {
+    updateFileJSON(agentsFile, (agents: IAgent[]) => {
         return agents.map(a => a.id === agent.id ? {...a, ...agent} : a)
     })
 }
 
-export function getAgents(): Agent[] {
+export function getAgents(): IAgent[] {
     return readFileJSON(agentsFile)
 }
 

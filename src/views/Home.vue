@@ -1,6 +1,10 @@
 <template>
     <div class="main flex">
         <div class="right bg-gray-900 p-2 flex flex-col">
+            <div class="count-requests">
+                <span class="text-gray-400">Requests: </span>
+                <span class="text-gray-400">{{ ($root as any).numRequests }}</span>
+            </div>
             <Agents class="flex-grow" />
             <div class="bottom-panel">
                 <router-link to="/settings">Settings</router-link>

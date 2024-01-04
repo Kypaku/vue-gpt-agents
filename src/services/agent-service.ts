@@ -10,6 +10,7 @@ import { extractTasks } from "../utils/helpers"
 import { ITask } from "@/types"
 
 async function startGoalAgent(modelSettings: ModelSettings, goal: string): Promise<ITask[]> {
+    (window as any).numRequests++
     const completion = await new LLMChain({
         llm: createModel(modelSettings),
         prompt: startGoalPrompt,
@@ -26,11 +27,34 @@ async function startGoalAgent(modelSettings: ModelSettings, goal: string): Promi
     })
 }
 
+export function renderFromUser(fromUser: any[]): string {
+    if (!fromUser) return ""
+    return `Additional information from the user:\n` + fromUser.filter((fromUserOne) => fromUserOne.answer)
+        .map((fromUserOne) => {
+            return 'The Question: ' + fromUserOne.ask + ":\nThe Answer: " + fromUserOne.answer
+        }).join("\n")
+}
+
+export function renderFiles(files: any[]): string {
+    if (!files) return ""
+    return `Files:\n` + files.map((fileOne) => {
+        return 'The Path: ' + fileOne.path + ":\nThe Content: " + fileOne.content
+    }).join("\n")
+}
+
+export function renderUrls(urls: any[]): string {
+    if (!urls) return ""
+    return `Web resources:\n` + urls.map((urlOne) => {
+        return 'The Url: ' + urlOne.url + ":\nThe Content: " + urlOne.content
+    }).join("\n")
+}
+
 async function executeTaskAgent(
     modelSettings: ModelSettings,
     goal: string,
     task: ITask
 ) {
+    (window as any).numRequests++
     const completion = await new LLMChain({
         llm: createModel(modelSettings),
         prompt: executeTaskPrompt,
@@ -38,6 +62,12 @@ async function executeTaskAgent(
         goal,
         task: task.content,
         customLanguage: modelSettings.customLanguage,
+        // "fromUser", "fileSystem", "files", "urls"
+        fromUser: renderFromUser(task.additionalInformation?.fromUser),
+        fileSystem: task.additionalInformation?.fileSystem,
+        files: renderFiles(task.additionalInformation?.files),
+        urls: renderUrls(task.additionalInformation?.urls),
+
     })
 
     return completion.text as string
@@ -51,6 +81,7 @@ async function createTasksAgent(
     result: string,
     completedTasks: string[] | undefined
 ) {
+    (window as any).numRequests++
     const completion = await new LLMChain({
         llm: createModel(modelSettings),
         prompt: createTasksPrompt,

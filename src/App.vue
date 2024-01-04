@@ -7,12 +7,13 @@
 </template>
 
 <script lang='ts'>
-    import {update} from 'lodash'
     import { defineComponent } from 'vue'
     import TheHeader from '@/components/partials/TheHeader.vue'
     import TheFooter from '@/components/partials/TheFooter.vue'
-    import { Agent } from '@/types'
+    import { IAgent } from '@/types'
     import { getAgents } from './api/json'
+
+    (window as any).numRequests = 0
 
     export default defineComponent({
         components: {
@@ -22,7 +23,8 @@
         },
         data() {
             return {
-                agents: [] as Agent[]
+                agents: [] as IAgent[],
+                numRequests: (window as any).numRequests,
             }
         },
         computed: {
@@ -35,6 +37,12 @@
         },
         created() {
             this.updateAgents()
+            this.agents.forEach(agent => {
+                agent.state = 'pending'
+            })
+            setInterval(() => {
+                this.numRequests = (window as any).numRequests
+            }, 500)
         },
     })
 

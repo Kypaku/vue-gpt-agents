@@ -10,7 +10,9 @@ import type { Message } from "../types/agentTypes"
 import { v4 } from "uuid"
 import type { RequestBody } from "../utils/interfaces"
 import { updateAgent } from "@/api/json"
-import { Agent, ITask } from "@/types"
+import { IAgent, ITask } from "@/types"
+import { getFilesInDirectory } from "@/helpers"
+import { readFile } from "@/helpers/node_gm"
 
 const TIMEOUT_LONG = 1000
 const TIMOUT_SHORT = 800
@@ -28,7 +30,7 @@ class AutonomousAgent {
   _id: string;
   id: string
   guestSettings: GuestSettings;
-  agent: Agent
+  agent: IAgent
   constructor(
       name: string,
       goal: string,
@@ -36,7 +38,7 @@ class AutonomousAgent {
       shutdown: () => void,
       modelSettings: ModelSettings,
       guestSettings: GuestSettings,
-      agent: Agent
+      agent: IAgent
   ) {
       this.name = name
       this.goal = goal
@@ -49,7 +51,7 @@ class AutonomousAgent {
       this.agent = agent
   }
 
-  async run(agent: Agent) {
+  async run(agent: IAgent) {
       const { isGuestMode, isValidGuest } = this.guestSettings
       if (isGuestMode && !isValidGuest && !this.modelSettings.customApiKey) {
           this.sendErrorMessage("errors.invalid-guest-key")
@@ -116,37 +118,49 @@ class AutonomousAgent {
       this.completedTasks.push(this.tasks[0]?.content || "")
       const currentTask = this.tasks.shift()
       this.sendThinkingMessage()
+      this.tasks.push(currentTask as ITask)
 
       const result = await this.executeTask(currentTask as ITask)
-      this.sendExecutionMessage(currentTask as string, result)
+      this.saveTasks()
+      this.sendExecutionMessage(currentTask, result)
 
       // Wait before adding tasks
       await new Promise((r) => setTimeout(r, TIMEOUT_LONG))
       this.sendThinkingMessage()
 
       // Add new tasks
-      try {
-          const newTasks = await this.getAdditionalTasks(
-        currentTask as ITask,
-        result
-          )
-          this.tasks = newTasks.concat(this.tasks)
-          this.saveTasks()
-          for (const task of newTasks) {
-              await new Promise((r) => setTimeout(r, TIMOUT_SHORT))
-              this.sendTaskMessage(task.content)
-          }
+      if (this.tasks.filter((task) => !task.completed).length < 4) {
+          try {
+              const newTasks = await this.getAdditionalTasks(
+            currentTask as ITask,
+            result
+              )
+              this.tasks = newTasks.concat(this.tasks)
+              this.saveTasks()
+              for (const task of newTasks) {
+                  await new Promise((r) => setTimeout(r, TIMOUT_SHORT))
+                  this.sendTaskMessage(task.content)
+              }
 
-          if (newTasks.length == 0) {
+              if (newTasks.length == 0) {
+                  this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
+              }
+          } catch (e) {
+              console.log(e)
+              this.sendErrorMessage(`errors.adding-additional-task`)
               this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
           }
-      } catch (e) {
-          console.log(e)
-          this.sendErrorMessage(`errors.adding-additional-task`)
-          this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
       }
 
       await this.loop()
+  }
+
+  completeTask(currentTask: ITask, result: string) {
+      if (currentTask) {
+          currentTask.result = result
+          currentTask.completed = new Date().toISOString()
+          this.saveTasks()
+      }
   }
 
   private maxLoops() {
@@ -201,18 +215,71 @@ class AutonomousAgent {
   }
 
   async handleTaskResult(task: ITask, taskResult: string) {
+      !task.additionalInformation && (task.additionalInformation = {})
       if (taskResult === 'NEED_FILE_SYSTEM') {
-
-      } else if (taskResult === 'NEED_FILE_CONTENT') {
-
-      } else if (taskResult === 'NEED_URL_CONTENT') {
-
+          task.additionalInformation.fileSystem = this.getFileSystem()
+      } else if (!taskResult.indexOf('NEED_FILE_CONTENT')) {
+          const path = taskResult.split('NEED_FILE_CONTENT:')[1]
+          path && this.addFileToTask(path, task)
+      } else if (!taskResult.indexOf('NEED_URL_CONTENT')) {
+          const url = taskResult.split(':')[1]
+          url && await this.addUrlToTask(url, task)
       } else if (!taskResult.indexOf('INPUT:')) {
-
+          !task.additionalInformation.fromUser && (task.additionalInformation.fromUser = [])
+          task.additionalInformation.fromUser.push({ ask: taskResult.split('INPUT:')[1] })
       } else {
-        //save task
-
+          // save task
+          this.completeTask(task as ITask, taskResult)
       }
+  }
+
+  addFileToTask(path: string, task: ITask) {
+      const content = this.getFileContent(path.trim())
+      //   content && (task.additionalInformation.files = [{ path, content }])
+      // Check file is already in task and if so, don't just update it
+      this.agent.settings.dirs = this.agent.settings.dirs || []
+      // Check if file is in the allowed directories (this.agent.settings.dirs) and if not, don't add it
+      if (!this.agent.settings.dirs.some((dir) => path.startsWith(dir))) {
+          !task.additionalInformation.files && (task.additionalInformation.files = [])
+          const existingFile = task.additionalInformation.files?.find((file) => file.path === path)
+          if (existingFile) {
+              existingFile.content = content
+              return
+          } else {
+              task.additionalInformation.files.push({ path, content })
+          }
+      } else {
+          this.sendErrorMessage(`errors.file-not-in-allowed-dirs: ` + path)
+      }
+  }
+
+  getFileContent(path: string): string {
+      const content = readFile(path)
+      return content
+  }
+
+  getFileSystem(): string[] {
+      const fileSystem = this.agent.settings.dirs.map((dir) => getFilesInDirectory(dir, dir).map((dirOne) => dirOne.fullPath)).flat()
+      return fileSystem
+  }
+
+  async addUrlToTask(url: string, task: ITask) {
+      const content = await this.getUrlContent(url)
+      //             const content = await this.getUrlContent(url)
+      //  content && (task.additionalInformation.urls = [{ url, content }])
+      // Check file is already in task and if so, don't just update it
+      const existingUrl = task.additionalInformation.urls?.find((_url) => _url.url === url)
+      if (existingUrl) {
+          existingUrl.content = content
+          return
+      } else {
+          task.additionalInformation.urls.push({ url, content })
+      }
+  }
+
+  async getUrlContent(url: string): Promise<string> {
+      const res = await axios.get(url)
+      return res.data
   }
 
   async executeTask(task: ITask): Promise<string> {
@@ -307,10 +374,10 @@ class AutonomousAgent {
       this.sendMessage({ type: "system", value: error })
   }
 
-  sendExecutionMessage(task: string, execution: string) {
+  sendExecutionMessage(task: ITask, execution: string) {
       this.sendMessage({
           type: "action",
-          info: `Executing "${task}"`,
+          info: `Executing "${task.content}"`,
           value: execution,
       })
   }

@@ -49,8 +49,19 @@ if you need additional information than return INPUT: $description (e.g. INPUT: 
 if you need to know structure of the directories you have access then return NEED_FILE_SYSTEM
 if you need to know content of specific file then return NEED_FILE_CONTENT: $filename (e.g. NEED_FILE_CONTENT: C:/path/to/index.js)
 if you need to know content of any url then return NEED_URL_CONTENT: $url (e.g. NEED_URL_CONTENT: https://www.google.com)
-Use QQQ{customLanguage}QQQ`,
-    inputVariables: ["goal", "task", "customLanguage"],
+Use QQQ{customLanguage}QQQ
+Additional information:
+FROM_USER:
+QQQ{fromUser}QQQ
+FILE_SYSTEM:
+QQQ{fileSystem}QQQ
+FILES:
+QQQ{files}QQQ
+URLS:
+QQQ{urls}QQQ
+
+`,
+    inputVariables: ["goal", "task", "customLanguage", "fromUser", "fileSystem", "files", "urls"],
 })
 
 export const createTasksPrompt = new PromptTemplate({

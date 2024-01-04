@@ -3,7 +3,7 @@
         <div>
             <span class="text-xs text-gray-400"  v-if="message.time">{{ new Date(message.time).toLocaleString() }}</span>
         </div>
-        {{  }}
+        <span v-if="message?.type === 'task'" class="mr-2 text-xs text-gray-300 rounded bg-gray-700 px-1">Add task</span>
         <template v-for="(segment, i) in segments">
             <div :key="i" class="code-block mb-1" v-if="segment.isCode">
                 <pre class="overflow-auto max-h-80"><code>{{ segment.text.trim()}}</code></pre>

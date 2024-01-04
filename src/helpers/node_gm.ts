@@ -81,7 +81,6 @@ export function tallySort<T>(arr: T[], f?: (el: T) => any, fInv?: (el: any) => a
 
 export const tallySortJSON = (arr: any[]) => tallySort(arr, JSON.stringify, JSON.parse)
 
-
 export function tallySortRelative(ts: TallySortItem[], totalValue?: number): TallySortRelativeItem[] {
     const _total = totalValue || total(ts, 'count')
     return ts.map(({ value, count }) => ({ value, percent: count / _total }))
@@ -420,7 +419,13 @@ export function readFileJSON(filePath: string) {
 
 export function readFileJSONLines(filename: string): any[] | undefined {
     if (!fs.existsSync(filename)) return
-    return fs.readFileSync(filename).toString().split('\n').filter(Boolean).map((el) => JSON.parse(el))
+    return fs.readFileSync(filename).toString().split('\n').filter(Boolean).map((el) => {
+        try {
+            return JSON.parse(el)
+        } catch (e) {
+            console.error(`readFileJSONLines: Error parsing JSON in file ${filename}: ${e}`)
+        }
+    })
 }
 
 export function writeFile(filename: string, data: string) {

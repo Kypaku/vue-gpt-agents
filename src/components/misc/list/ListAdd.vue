@@ -5,9 +5,9 @@
             type="text"
             v-model="name"
             :placeholder="placeholder"
-            class="border-2 border-gray-300 p-1 flex-grow text-black rounded-l"
+            class="border-2 border-gray-300 bg-gray-700 p-1 flex-grow text-black rounded-l"
             @keypress.enter="add"/>
-        <button class="bg-gray-300 p-1 text-black border-2 border-gray-300 rounded-r" :disabled="!name" @click="add">Add</button>
+        <button class="bg-gray-700 p-1 text-black border-2 border-gray-300 bg-blue-900 text-white rounded-r" :disabled="!name" @click="add">Add</button>
         <!-- <Suggestions :items="suggestionsFiltred" :all="suggestions" @select="val => (name = val.name)"/> -->
     </div>
 </template>

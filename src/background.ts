@@ -4,6 +4,7 @@ import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
+const path = require('path')
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -12,10 +13,11 @@ protocol.registerSchemesAsPrivileged([
 
 async function createWindow () {
     // Create the browser window.
-    // const iconPath = path.join(__dirname, '..', 'public', 'icon.png')
+    const iconPath = path.join(__dirname, '..', 'public', 'robot.png')
     const win = new BrowserWindow({
         width: 1280,
         height: 900,
+        icon: iconPath,
         webPreferences: {
             enableRemoteModule: true,
             contextIsolation: false,

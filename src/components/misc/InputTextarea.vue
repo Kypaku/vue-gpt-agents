@@ -5,7 +5,7 @@
         </div>
         <textarea
             type="text"
-            class="border-2 rounded p-1  bg-gray-700"
+            class="border-2 border-gray-300 rounded p-1  bg-gray-700"
             ref="input"
             :id="id"
             :value="value"

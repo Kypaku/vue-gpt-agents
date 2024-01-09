@@ -54,6 +54,19 @@
                     </li>
                 </ul>
             </div>
+
+            <!-- Display tests results -->
+            <div v-if="task.additionalInformation.testsResult" class="tests-result">
+                <div class="flex-center-between">
+                    <h4>Tests Result:</h4>
+                    <button @click="$emit('editAdditionalInfo', {...task.additionalInformation, testsResult: undefined})" class="ml-2 text-sm text-gray-600">
+                        <TrashIcon />
+                    </button>
+                </div>
+                <div class="result">
+                    {{task.additionalInformation.testsResult}}
+                </div>
+            </div>
         </Accordeon>
     </div>
 </template>

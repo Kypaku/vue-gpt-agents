@@ -47,13 +47,21 @@
                 :task="task"
                 @editTask="editTask(i)"
                 @completeTask="completeTask(i)"
+                @editAdditionalInfo="data => editAdditionalInfo(i, data)"
                 :index="i + 1"
                 v-for="(task, i) in tasks"
                 :key="i"/>
         </div>
-        <div class="log mt-6">
-            <b class="text-xl">Log <span class="text-base" >({{ messages?.length }})</span>: </b>
-            <Message :message="item" v-for="(item, i) in [...messages].reverse()" :key="i"/>
+        <div class="log-header mt-6">
+            <span class="text-xl"><b>Log </b><span class="text-sm">({{ messages?.length }})</span>: </span>
+            <input
+                type="search"
+                class="bg-gray-700 text-white p-1 rounded w-1/2"
+                placeholder="Search..."
+                v-model="q"/>
+        </div>
+        <div class="log">
+            <Message :message="item" v-for="(item, i) in filteredMessages" :key="item.time + '_' + i"/>
         </div>
     </div>
 </template>
@@ -71,6 +79,7 @@
     import TrashIcon from './misc/icons/TrashIcon.vue'
     import IconSettings from './misc/icons/IconSettings.vue'
     import Settings from './partials/Settings.vue'
+    import { localeIncludes } from '@/helpers/node_gm'
 
     export default defineComponent({
         props: {
@@ -88,6 +97,7 @@
         // emits: ['update:modelValue'], this.$emit('update:modelValue', title)
         data() {
             return {
+                q: '',
                 showSettings: false,
                 agentInstance: null as AutonomousAgent,
                 messages: [] as IMessage[],
@@ -95,6 +105,14 @@
             }
         },
         computed: {
+            filteredMessages(): IMessage[] {
+                return [...this.messages]
+                    .reverse()
+                    .filter((item) => {
+                        if (!this.q) return true
+                        return localeIncludes(item.value || '', this.q)
+                    })
+            },
 
             agent(): IAgent | undefined {
                 return this.$root.agents?.find(a => a.id === this.$route.params.id) ?? null
@@ -104,6 +122,11 @@
             }
         },
         methods: {
+            editAdditionalInfo(i: number, data: any) {
+                this.agentInstance.tasks[i].additionalInformation = data
+                this.updateAgent('tasks', this.agentInstance.tasks)
+            },
+
             clearTasks() {
                 if (confirm("Are you sure you want to clear all tasks?")) {
                     this.agentInstance.tasks = []
@@ -204,6 +227,10 @@
     </script>
 
 <style lang="scss" scoped>
+    .agent{
+        max-width: 800px;
+    }
+
     .log{
         max-height: 500px;
         overflow-y: scroll;

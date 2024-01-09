@@ -56,6 +56,14 @@
     </script>
 
 <style lang="scss" scoped>
+    .tests{
+        max-width: 600px;
+    }
+
+    .code-block{
+        max-width: 600px;
+    }
+
     .message{
         span {
             white-space: pre-wrap;

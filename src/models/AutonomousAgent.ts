@@ -13,10 +13,19 @@ import { updateAgent } from "@/api/json"
 import { IAgent, ITask } from "@/types"
 import { getFilesInDirectory } from "@/helpers"
 import { readFile, runAsync, runSync, writeFile } from "@/helpers/node_gm"
+import { handleContentBeforeWrite } from "@/utils/contentHandlers"
 
 const TIMEOUT_LONG = 1000
 const TIMOUT_SHORT = 800
 
+export enum AgentCommands {
+    "NEED_FILE_SYSTEM" = "NEED_FILE_SYSTEM",
+    "NEED_FILE_CONTENT" = "NEED_FILE_CONTENT",
+    "WRITE_FILE_CONTENT" = "WRITE_FILE_CONTENT",
+    "NEED_URL_CONTENT" = "NEED_URL_CONTENT",
+    "INPUT" = "INPUT",
+    "TESTS" = "TESTS",
+}
 class AutonomousAgent {
     name: string;
     goal: string;
@@ -112,42 +121,54 @@ class AutonomousAgent {
         // Wait before starting
         await new Promise((r) => setTimeout(r, TIMEOUT_LONG))
 
-        // Execute first task
-        // Get and remove first task
-        this.completedTasks.push(this.tasks[0]?.content || "")
-        const currentTask = this.tasks.shift()
-        this.sendThinkingMessage(currentTask.content)
-        this.tasks.push(currentTask as ITask)
+        if (this.agent.settings.sequentialMode) {
+            const currentTask = this.tasks[0]
+            this.sendThinkingMessage(currentTask.content)
 
-        const result = await this.executeTask(currentTask as ITask)
-        this.saveTasks()
-        this.sendExecutionMessage(currentTask, result)
+            const result = await this.executeTask(currentTask as ITask)
 
-        // Wait before adding tasks
-        await new Promise((r) => setTimeout(r, TIMEOUT_LONG))
-        this.sendThinkingMessage('Add new tasks')
+            this.saveTasks()
+            this.sendExecutionMessage(currentTask, result)
+        } else {
+            // Execute first task
+            // Get and remove first task
+            this.completedTasks.push(this.tasks[0]?.content || "")
+            const currentTask = this.tasks.shift()
 
-        // Add new tasks
-        if (this.tasks.filter((task) => !task.completed).length < 4) {
-            try {
-                const newTasks = await this.getAdditionalTasks(
-            currentTask as ITask,
-            result
-                )
-                this.tasks = newTasks.concat(this.tasks)
-                this.saveTasks()
-                for (const task of newTasks) {
-                    await new Promise((r) => setTimeout(r, TIMOUT_SHORT))
-                    this.sendTaskMessage(task.content)
-                }
+            this.sendThinkingMessage(currentTask.content)
 
-                if (newTasks.length == 0) {
+            this.tasks.push(currentTask as ITask)
+
+            const result = await this.executeTask(currentTask as ITask)
+            this.saveTasks()
+            this.sendExecutionMessage(currentTask, result)
+
+            // Wait before adding tasks
+            await new Promise((r) => setTimeout(r, TIMEOUT_LONG))
+            this.sendThinkingMessage('Add new tasks')
+
+            // Add new tasks
+            if (this.tasks.filter((task) => !task.completed).length < 4) {
+                try {
+                    const newTasks = await this.getAdditionalTasks(
+                currentTask as ITask,
+                result
+                    )
+                    this.tasks = newTasks.concat(this.tasks)
+                    this.saveTasks()
+                    for (const task of newTasks) {
+                        await new Promise((r) => setTimeout(r, TIMOUT_SHORT))
+                        this.sendTaskMessage(task.content)
+                    }
+
+                    if (newTasks.length == 0) {
+                        this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
+                    }
+                } catch (e) {
+                    console.log(e)
+                    this.sendErrorMessage(`errors.adding-additional-task`)
                     this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
                 }
-            } catch (e) {
-                console.log(e)
-                this.sendErrorMessage(`errors.adding-additional-task`)
-                this.sendActionMessage("task-marked-as-complete", "Task marked as complete: " + currentTask)
             }
         }
 
@@ -215,10 +236,10 @@ class AutonomousAgent {
 
     async handleTaskResult(task: ITask, taskResult: string) {
         !task.additionalInformation && (task.additionalInformation = {})
-        if (taskResult === 'NEED_FILE_SYSTEM') {
+        if (taskResult.trim() === AgentCommands.NEED_FILE_SYSTEM) {
             task.additionalInformation.fileSystem = this.getFileSystem()
-        } else if (!taskResult.indexOf('NEED_FILE_CONTENT')) {
-            const path = taskResult.split('NEED_FILE_CONTENT:')[1]
+        } else if (!taskResult.indexOf(AgentCommands.NEED_FILE_CONTENT)) {
+            const path = taskResult.split(AgentCommands.NEED_FILE_CONTENT + ':')[1]
             path && this.addFileToTask(path, task)
         } else if (!taskResult.indexOf('WRITE_FILE_CONTENT')) {
             const path = taskResult.split('WRITE_FILE_CONTENT:')[1]?.split('\n')[0]?.trim()
@@ -231,7 +252,9 @@ class AutonomousAgent {
         } else if (!taskResult.indexOf('INPUT:')) {
             !task.additionalInformation.fromUser && (task.additionalInformation.fromUser = [])
             task.additionalInformation.fromUser.push({ ask: taskResult.split('INPUT:')[1] })
-        } else {
+        } else if() {
+            
+        }else {
             // save task
             this.completeTask(task as ITask, taskResult)
         }
@@ -281,8 +304,10 @@ class AutonomousAgent {
             this.sendErrorMessage(`errors.file-not-in-allowed-dirs: ` + path)
             return
         }
-        writeFile(path, content)
-        this.sendMessage({ type: "system", value: `File written: ${path}` })
+        writeFile(path, handleContentBeforeWrite(path, content))
+        setTimeout(() => {
+            this.sendMessage({ type: "system", value: `File written: ${path}` })
+        }, 0)
     }
 
     getFileContent(path: string): string {
@@ -323,7 +348,7 @@ class AutonomousAgent {
                 this.agent.settings
             )
             this.handleTaskResult(task, taskResult)
-            this.runTests(task)
+            await this.runTests(task)
             return taskResult
         }
 

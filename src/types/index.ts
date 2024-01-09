@@ -7,6 +7,7 @@ export interface IAgentSettings {
     dirs?: string[]
     tests?: string[]
     allowWrite?: boolean
+    sequentialMode?: boolean
 }
 export interface ITask {
     content?: string

@@ -21,6 +21,11 @@
             @update:value="val => setSettings('maxTokens', val)" />
         <ToggleSwitch
             class="mt-2"
+            label="Run tasks sequentially"
+            :value="settings.sequentialMode"
+            @update:value="val => setSettings('sequentialMode', val)" />
+        <ToggleSwitch
+            class="mt-2"
             label="Allow write access to files"
             :value="settings.allowWrite"
             @update:value="val => setSettings('allowWrite', val)" />

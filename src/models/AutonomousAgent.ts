@@ -248,6 +248,10 @@ class AutonomousAgent {
             !task.additionalInformation.fromUser && (task.additionalInformation.fromUser = [])
             task.additionalInformation.fromUser.push(fixPrompt(taskResult) as any)
         } else {
+            // clear fromUser but only strings
+            if (task.additionalInformation.fromUser) {
+                task.additionalInformation.fromUser = task.additionalInformation.fromUser.filter((el) => typeof el === "string")
+            }
             // save task
             this.completeTask(task as ITask, taskResult)
         }

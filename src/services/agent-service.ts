@@ -29,9 +29,13 @@ async function startGoalAgent(modelSettings: ModelSettings, goal: string): Promi
 
 export function renderFromUser(fromUser: any[]): string {
     if (!fromUser) return ""
-    return `Additional information from the user:\n` + fromUser.filter((fromUserOne) => fromUserOne.answer)
+    return `Additional information from the user:\n` + fromUser.filter((fromUserOne) => fromUserOne.answer || typeof fromUserOne === "string")
         .map((fromUserOne) => {
-            return 'The Question: ' + fromUserOne.ask + ":\nThe Answer: " + fromUserOne.answer
+            if (typeof fromUserOne === "string") {
+                return fromUserOne
+            } else {
+                return 'The Question: ' + fromUserOne.ask + ":\nThe Answer: " + fromUserOne.answer
+            }
         }).join("\n")
 }
 

@@ -1,8 +1,7 @@
 import { OpenAI } from "langchain/llms/openai"
 import { PromptTemplate } from "langchain/prompts"
 import type { ModelSettings } from "./types"
-import { GPT_35_TURBO } from "./constants"
-import { AgentCommands } from "@/models/AutonomousAgent"
+import { AgentCommands, GPT_35_TURBO } from "./constants"
 
 export const createModel = (settings: ModelSettings) => {
     let _settings: ModelSettings | undefined = settings
@@ -46,11 +45,11 @@ export const executeTaskPrompt = new PromptTemplate({
 You have the following objective QQQ{goal}QQQ
 You have the following task QQQ{task}QQQ
 Execute the task and return the response as a string
-if you need additional information than return INPUT: $description (e.g. INPUT: I need more information about the task)
+if you need additional information than return ${AgentCommands.INPUT}: $description (e.g. ${AgentCommands.INPUT}: I need more information about the task)
 if you need to know structure of the directories you have access then return ${AgentCommands.NEED_FILE_SYSTEM}
 if you need to know content of specific file then return ${AgentCommands.NEED_FILE_CONTENT}: $absolutePath (e.g. ${AgentCommands.NEED_FILE_CONTENT}: C:/path/to/index.js)
-if you need to write content to specific file then return WRITE_FILE_CONTENT: $absolutePath (e.g. WRITE_FILE_CONTENT: C:/path/to/index.js \n$RAW_CONTENT) so $RAW_CONTENT is literal content to write, no need to add quotes, name of file or programming language
-if you need to know content of any url then return NEED_URL_CONTENT: $url (e.g. NEED_URL_CONTENT: https://www.google.com)
+if you need to write content to specific file then return ${AgentCommands.WRITE_FILE_CONTENT}: $absolutePath (e.g. ${AgentCommands.WRITE_FILE_CONTENT}: C:/path/to/index.js \n$RAW_CONTENT) so $RAW_CONTENT is literal content to write, no need to add quotes, name of file or programming language
+if you need to know content of any url then return ${AgentCommands.NEED_URL_CONTENT}: $url (e.g. ${AgentCommands.NEED_URL_CONTENT}: https://www.google.com)
 Use QQQ{customLanguage}QQQ
 Additional information:
 FROM_USER:
@@ -77,3 +76,9 @@ Return the response as an array of strings that can be used in JSON.parse() and 
 Use QQQ{customLanguage}QQQ.`.replaceAll("QQQ", qq),
     inputVariables: ["goal", "tasks", "lastTask", "result", "customLanguage"],
 })
+
+export const fixPrompt = (prevAnswer: string): string => {
+    return `Your previous answer has at least one commands (${Object.values(AgentCommands)}), but it seems that you did not use it correctly. 
+Please try again if it necessary. 
+Your previous answer was:\n\n${prevAnswer}\n\n`
+}

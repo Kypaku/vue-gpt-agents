@@ -2,6 +2,7 @@ import axios from "axios"
 import type { ModelSettings, GuestSettings } from "../utils/types"
 import AgentService, { executeTaskAgent } from "../services/agent-service"
 import {
+    AgentCommands,
     DEFAULT_MAX_LOOPS_CUSTOM_API_KEY,
     DEFAULT_MAX_LOOPS_FREE,
     DEFAULT_MAX_LOOPS_PAID,
@@ -14,18 +15,10 @@ import { IAgent, ITask } from "@/types"
 import { getFilesInDirectory } from "@/helpers"
 import { readFile, runAsync, runSync, writeFile } from "@/helpers/node_gm"
 import { handleContentBeforeWrite } from "@/utils/contentHandlers"
+import { fixPrompt } from "@/utils/prompts"
 
 const TIMEOUT_LONG = 1000
 const TIMOUT_SHORT = 800
-
-export enum AgentCommands {
-    "NEED_FILE_SYSTEM" = "NEED_FILE_SYSTEM",
-    "NEED_FILE_CONTENT" = "NEED_FILE_CONTENT",
-    "WRITE_FILE_CONTENT" = "WRITE_FILE_CONTENT",
-    "NEED_URL_CONTENT" = "NEED_URL_CONTENT",
-    "INPUT" = "INPUT",
-    "TESTS" = "TESTS",
-}
 class AutonomousAgent {
     name: string;
     goal: string;
@@ -241,20 +234,20 @@ class AutonomousAgent {
         } else if (!taskResult.indexOf(AgentCommands.NEED_FILE_CONTENT)) {
             const path = taskResult.split(AgentCommands.NEED_FILE_CONTENT + ':')[1]
             path && this.addFileToTask(path, task)
-        } else if (!taskResult.indexOf('WRITE_FILE_CONTENT')) {
-            const path = taskResult.split('WRITE_FILE_CONTENT:')[1]?.split('\n')[0]?.trim()
+        } else if (!taskResult.indexOf(AgentCommands.WRITE_FILE_CONTENT)) {
+            const path = taskResult.split(AgentCommands.WRITE_FILE_CONTENT + ':')[1]?.split('\n')[0]?.trim()
             const content = taskResult.split('\n').slice(1).join('\n')
-            console.log("WRITE_FILE_CONTENT", { path, content })
             path && this.writeFile(path, content)
-        } else if (!taskResult.indexOf('NEED_URL_CONTENT')) {
+        } else if (!taskResult.indexOf(AgentCommands.NEED_URL_CONTENT)) {
             const url = taskResult.split(':')[1]
             url && await this.addUrlToTask(url, task)
-        } else if (!taskResult.indexOf('INPUT:')) {
+        } else if (!taskResult.indexOf(AgentCommands.INPUT + ':')) {
             !task.additionalInformation.fromUser && (task.additionalInformation.fromUser = [])
-            task.additionalInformation.fromUser.push({ ask: taskResult.split('INPUT:')[1] })
-        } else if() {
-            
-        }else {
+            task.additionalInformation.fromUser.push({ ask: taskResult.split(AgentCommands.INPUT + ':')[1] })
+        } else if (Object.values(AgentCommands).some(el => taskResult.includes(el))) {
+            !task.additionalInformation.fromUser && (task.additionalInformation.fromUser = [])
+            task.additionalInformation.fromUser.push(fixPrompt(taskResult) as any)
+        } else {
             // save task
             this.completeTask(task as ITask, taskResult)
         }

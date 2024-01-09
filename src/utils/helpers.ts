@@ -21,9 +21,10 @@ export const extractTasks = (
     text: string,
     completedTasks: string[]
 ): string[] => {
-    return extractArray(text)
+    const res = extractArray(text)
         .filter(realTasksFilter)
         .filter((task) => !(completedTasks || []).includes(task))
+    return [...res] //.reverse()
 }
 
 export const extractArray = (inputStr: string): string[] => {

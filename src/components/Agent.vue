@@ -1,11 +1,16 @@
 <template>
     <div class="agent">
         <div class="name">
-            <InputText
-                class="w-full"
-                :label="'Name: '"
-                :value="agent?.name"
-                @update:value="val => updateAgent('name', val)"/>
+            <div class="flex-center">
+                <InputText
+                    class="w-full"
+                    :label="'Name: '"
+                    :value="agent?.name"
+                    @update:value="val => updateAgent('name', val)"/>
+                <button @click="deleteAgent" class="rounded hover:bg-gray-600 bg-gray-700 text-white p-1 mt-6" >
+                    <TrashIcon />
+                </button>
+            </div>
         </div>
         <div class="goal mt-2">
             <InputTextarea
@@ -23,9 +28,6 @@
             </div>
             <div class="flex-center" >
                 <button class="py-1 px-4 bg-blue-900 rounded mr-2 ml-2" @click="clearMessages">Clear</button>
-                <button @click="deleteAgent" class="rounded hover:bg-gray-600 bg-gray-700 text-white p-1" >
-                    <TrashIcon />
-                </button>
             </div>
         </div>
         <Settings
@@ -34,7 +36,12 @@
             @update:value="val => updateAgent('settings', val)"
             class="mt-2" />
         <div class="tasks mt-4" v-if="tasks.length">
-            <b class="text-lg">Tasks:</b>
+            <div class="flex-center-between">
+                <b class="text-lg">Tasks:</b>
+                <div class="underline cursor-pointer text-gray-50" @click="clearTasks">
+                    Clear tasks
+                </div>
+            </div>
             <Task
                 @deleteTask="deleteTask(i)"
                 :task="task"
@@ -97,6 +104,13 @@
             }
         },
         methods: {
+            clearTasks() {
+                if (confirm("Are you sure you want to clear all tasks?")) {
+                    this.agentInstance.tasks = []
+                    this.updateAgent('tasks', this.agentInstance.tasks)
+                }
+            },
+
             completeTask(i: number) {
                 const taskContent = prompt("Complete the task:")
                 if (taskContent !== null && taskContent.trim() !== "") {
@@ -105,7 +119,7 @@
                     this.updateAgent('tasks', this.agentInstance.tasks)
                 }
             },
-           
+
             editTask(i: number) {
                 const taskContent = prompt("Edit task content:", this.agentInstance.tasks[i].content)
                 if (taskContent !== null && taskContent.trim() !== "") {
@@ -159,11 +173,14 @@
         },
         created() {
             if (this.agent) {
+                this.settings = this.agent.settings || this.settings
                 const settings = {
                     customApiKey: ls("apiKey"),
                     customModelName: this.settings.model || 'gpt-3.5-turbo-0301',
-                    customTemperature: this.settings.temperature || 0.9,
+                    customTemperature: +this.settings.temperature || 0.9,
                     customMaxLoops: this.settings.maxLoops || 9999999,
+                    maxTokens: +this.settings.maxTokens || 400,
+                    customLanguage: this.settings.language || 'en',
                 }
                 this.agentInstance = new AutonomousAgent(
                     this.agent.name.trim(),

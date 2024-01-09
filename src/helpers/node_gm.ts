@@ -766,10 +766,26 @@ export function convertToArgs(args: any) {
     return Array.isArray(args) ? args.join(' ') : args
 }
 
-export function callSync(cmd: string, args: any) {
-    const proc = spawnSync(cmd, args)
-    // console.log(proc);
+export function callSync(cmd: string, args: any, options?) {
+    const proc = spawnSync(cmd, args, options)
+    console.log('callSync', cmd, proc);
     return proc.output.toString()
+}
+
+export function runAsync(cmd: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        exec(cmd, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`runAsync error: ${error}`);
+                resolve(error.toString())
+            }
+            if (stderr) {
+                console.error(`runAsync stderr: ${stderr}`);
+                return;
+            }
+            resolve(stdout.toString())
+        });
+    })
 }
 
 export const run = spawn

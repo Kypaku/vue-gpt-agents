@@ -7,7 +7,7 @@ import {
 import type { ModelSettings } from "../utils/types"
 import { LLMChain } from "langchain/chains"
 import { extractTasks } from "../utils/helpers"
-import { ITask } from "@/types"
+import { IAgentSettings, ITask } from "@/types"
 
 async function startGoalAgent(modelSettings: ModelSettings, goal: string): Promise<ITask[]> {
     (window as any).numRequests++
@@ -49,11 +49,12 @@ export function renderUrls(urls: any[]): string {
     }).join("\n")
 }
 
-async function executeTaskAgent(
+export async function executeTaskAgent(
     modelSettings: ModelSettings,
     goal: string,
-    task: ITask
-) {
+    task: ITask,
+    settings: IAgentSettings
+): Promise<string> {
     (window as any).numRequests++
     const completion = await new LLMChain({
         llm: createModel(modelSettings),
@@ -64,10 +65,10 @@ async function executeTaskAgent(
         customLanguage: modelSettings.customLanguage,
         // "fromUser", "fileSystem", "files", "urls"
         fromUser: renderFromUser(task.additionalInformation?.fromUser),
-        fileSystem: task.additionalInformation?.fileSystem,
+        fileSystem: [...(task.additionalInformation?.fileSystem || []), settings.dirs?.join(", ")].filter(Boolean) || "Unknown",
         files: renderFiles(task.additionalInformation?.files),
         urls: renderUrls(task.additionalInformation?.urls),
-
+        testsResult: task.additionalInformation?.testsResult || "Unknown",
     })
 
     return completion.text as string
@@ -106,11 +107,6 @@ interface AgentService {
     modelSettings: ModelSettings,
     goal: string
   ) => Promise<ITask[]>;
-  executeTaskAgent: (
-    modelSettings: ModelSettings,
-    goal: string,
-    task: ITask
-  ) => Promise<string>;
   createTasksAgent: (
     modelSettings: ModelSettings,
     goal: string,
@@ -123,7 +119,6 @@ interface AgentService {
 
 const OpenAIAgentService: AgentService = {
     startGoalAgent: startGoalAgent,
-    executeTaskAgent: executeTaskAgent,
     createTasksAgent: createTasksAgent,
 }
 

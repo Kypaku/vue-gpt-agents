@@ -1,39 +1,57 @@
 <template>
     <div class="bg-gray-700 p-2 rounded" >
-        <Accordeon class="settings rounded" title="Settings">
-            <InputText
-                class="mb-2 max-queries"
-                :value="settings.maxLoops"
-                :placeholder="settings.maxLoops || defaultSettings.maxLoops"
-                label="Maximum loops"
-                @update:value="val => setSettings('maxLoops', val)"  />
-            <InputText
-                class="mt-2"
-                label="Model"
-                :value="settings.model"
-                :placeholder="settings.maxQueries || defaultSettings.model"
-                @update:value="val => setSettings('model', val)" />
-            <InputText
-                class="mt-2"
-                label="Max Tokens for answers"
-                :value="settings.maxTokens"
-                :placeholder="settings.maxTokens || defaultSettings.maxTokens"
-                @update:value="val => setSettings('maxTokens', val)" />
-            <InputText
-                class="mt-2"
-                label="Temperature"
-                :value="settings.temperature"
-                :placeholder="settings.temperature || defaultSettings.temperature"
-                @update:value="val => setSettings('temperature', val)" />
-            <div class="dirs mt-4">
-                <b class="" >Allowed directories:</b>
-                <List :addPlaceholder="'/path/to/dir'" :items="settings?.dirs || defaultSettings?.dirs || []" @add="({name, pos}) => setSettings('dirs', [name, ...(settings?.dirs || defaultSettings?.dirs || [])])">
-                    <template #default="{item}">
-                        {{ item  }}
-                    </template>
-                </List>
-            </div>
-        </Accordeon>
+        <InputText
+            class="mb-2 max-queries"
+            :value="settings.maxLoops"
+            :placeholder="settings.maxLoops || defaultSettings.maxLoops"
+            label="Maximum loops"
+            @update:value="val => setSettings('maxLoops', val)"  />
+        <InputText
+            class="mt-2"
+            label="Model"
+            :value="settings.model"
+            :placeholder="settings.maxQueries || defaultSettings.model"
+            :suggestions="modelsSuggestions"
+            @update:value="val => setSettings('model', val)" />
+        <InputText
+            class="mt-2"
+            label="Max Tokens for answers"
+            :value="settings.maxTokens"
+            :placeholder="settings.maxTokens || defaultSettings.maxTokens"
+            @update:value="val => setSettings('maxTokens', val)" />
+        <ToggleSwitch
+            class="mt-2"
+            label="Allow write access to files"
+            :value="settings.allowWrite"
+            @update:value="val => setSettings('allowWrite', val)" />
+        <InputText
+            class="mt-2"
+            label="Temperature"
+            :value="settings.temperature"
+            :placeholder="settings.temperature || defaultSettings.temperature"
+            @update:value="val => setSettings('temperature', val)" />
+        <InputText
+            class="mt-2"
+            label="Language"
+            :value="settings.language"
+            :placeholder="settings.language || defaultSettings.language"
+            @update:value="val => setSettings('language', val)" />
+        <div class="dirs mt-4">
+            <b class="" >Allowed directories:</b>
+            <List :addPlaceholder="'/path/to/dir'" :items="settings?.dirs || defaultSettings?.dirs || []" @add="({name, pos}) => setSettings('dirs', [name, ...(settings?.dirs || defaultSettings?.dirs || [])])">
+                <template #default="{item}">
+                    {{ item  }}
+                </template>
+            </List>
+        </div>
+        <div class="tests">
+            <b class="mt-4" >Tests:</b>
+            <List :addPlaceholder="'npm run test'" :items="settings?.tests || defaultSettings?.tests || []" @add="({name, pos}) => setSettings('tests', [name, ...(settings?.tests || defaultSettings?.tests || [])])">
+                <template #default="{item}">
+                    {{ item  }}
+                </template>
+            </List>
+        </div>
     </div>
 </template>
 
@@ -41,13 +59,18 @@
     import { set } from 'lodash'
     import { defineComponent, PropType } from 'vue'
     import InputText from '@/components/misc/InputText.vue'
-    // import Accordeon from './misc/Accordeon.vue'
+    import Accordeon from '../misc/Accordeon.vue'
     // import ToggleSwitch from './misc/ToggleSwitch.vue'
     import ls from 'local-storage'
     // import Warning from './misc/Warning.vue'
     import * as path from 'path'
     import { IAgentSettings } from '@/types'
     import List from '../misc/list/List.vue'
+    import ToggleSwitch from '../misc/ToggleSwitch.vue'
+    import { InputTextSuggestion } from '../misc/InputTextarea.vue'
+    import SimpleGPT from 'gpt-simple-api-ts'
+
+    const api = new SimpleGPT({ key: (ls as any)("apiKey") as string })
 
     export default defineComponent({
         props: {
@@ -55,10 +78,13 @@
         },
         components: {
             InputText,
-            List
+            List,
+            ToggleSwitch,
+            Accordeon,
         },
         data() {
             return {
+                models: [],
                 couldNotRunScript: '',
                 isPythonInstalled: false,
                 ls,
@@ -72,6 +98,9 @@
             }
         },
         computed: {
+            modelsSuggestions(): InputTextSuggestion[] {
+                return this.models.map((model) => ({ name: model, value: model }))
+            },
 
         },
         methods: {
@@ -81,10 +110,12 @@
                 } else {
                     ls('settings', { ...this.settings, [key]: val })
                 }
+                this.settings = { ...this.settings, [key]: val }
             },
         },
 
-        created () {
+        async created () {
+            this.models = (await api.getModels()) || []
         },
     })
 

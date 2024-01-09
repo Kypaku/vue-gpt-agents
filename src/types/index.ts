@@ -5,6 +5,8 @@ export interface IAgentSettings {
     model?: string
     temperature?: number
     dirs?: string[]
+    tests?: string[]
+    allowWrite?: boolean
 }
 export interface ITask {
     content?: string
@@ -26,8 +28,9 @@ export interface ITask {
             content: string
         }[]
         fileSystem?: string[]
+        testsResult?: string
     }
-} 
+}
 export interface IAgent {
     id: string
     name: string
@@ -43,8 +46,6 @@ export interface IMessage {
     id?: string
     message: string
     value?: string
-    type?: 'system' | 'action' | 'thinking' | 'goal' | 'task'
+    type?: 'system' | 'action' | 'thinking' | 'goal' | 'task' | 'tests'
     time: number
 }
-
-

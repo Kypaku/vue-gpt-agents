@@ -15,6 +15,7 @@
   "dependencies": {
     "autoprefixer": "^9",
     "core-js": "^3.6.5",
+    "gpt-simple-api-ts": "^1.0.37",
     "langchain": "^0.0.67",
     "local-storage": "^2.0.0",
     "postcss": "^7",

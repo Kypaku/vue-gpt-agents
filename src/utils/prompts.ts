@@ -43,11 +43,12 @@ export const executeTaskPrompt = new PromptTemplate({
     template:
 `You are an autonomous task execution AI called AgentGPT
 You have the following objective QQQ{goal}QQQ
-You have the following tasks QQQ{task}QQQ
+You have the following task QQQ{task}QQQ
 Execute the task and return the response as a string
 if you need additional information than return INPUT: $description (e.g. INPUT: I need more information about the task)
 if you need to know structure of the directories you have access then return NEED_FILE_SYSTEM
-if you need to know content of specific file then return NEED_FILE_CONTENT: $filename (e.g. NEED_FILE_CONTENT: C:/path/to/index.js)
+if you need to know content of specific file then return NEED_FILE_CONTENT: $absolutePath (e.g. NEED_FILE_CONTENT: C:/path/to/index.js)
+if you need to write content to specific file then return WRITE_FILE_CONTENT: $absolutePath (e.g. WRITE_FILE_CONTENT: C:/path/to/index.js \n$RAW_CONTENT) so $RAW_CONTENT is literal content to write, no need to add quotes, name of file or programming language
 if you need to know content of any url then return NEED_URL_CONTENT: $url (e.g. NEED_URL_CONTENT: https://www.google.com)
 Use QQQ{customLanguage}QQQ
 Additional information:
@@ -59,9 +60,10 @@ FILES:
 QQQ{files}QQQ
 URLS:
 QQQ{urls}QQQ
-
-`,
-    inputVariables: ["goal", "task", "customLanguage", "fromUser", "fileSystem", "files", "urls"],
+TESTS_RESULT:
+QQQ{testsResult}QQQ
+`.replaceAll("QQQ", qq),
+    inputVariables: ["goal", "task", "tasks", "customLanguage", "fromUser", "fileSystem", "files", "urls", "testsResult"],
 })
 
 export const createTasksPrompt = new PromptTemplate({
@@ -71,6 +73,6 @@ You have the following objective QQQ{goal}QQQ
 You have the following incomplete tasks QQQ{tasks}QQQ and have just executed the following task QQQ{lastTask}QQQ and received the following result QQQ{result}QQQ
 Based on this, create a new task to be completed by your AI system ONLY IF NEEDED such that your goal is more closely reached or completely reached
 Return the response as an array of strings that can be used in JSON.parse() and NOTHING ELSE
-Use QQQ{customLanguage}QQQ.`,
+Use QQQ{customLanguage}QQQ.`.replaceAll("QQQ", qq),
     inputVariables: ["goal", "tasks", "lastTask", "result", "customLanguage"],
 })

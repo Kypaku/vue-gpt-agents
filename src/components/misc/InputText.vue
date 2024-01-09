@@ -16,7 +16,7 @@
                 @keydown.tab.exact.prevent="suggestions && suggest(suggestionsFiltered[0])"
                 @keypress.enter="$emit('end')"
                 @input="ev => $emit('update:value', ev?.target?.value)"/>
-            <div class="suggestions suggestions-action cursor-pointer flex flex-wrap justify-center mt-1" v-if="false">
+            <div class="suggestions suggestions-action cursor-pointer flex flex-wrap justify-center mt-1" v-if="suggestions && suggestions.length">
                 <div class="dummy">Dummy</div>
                 <div
                     class="suggestion mr-2 text-sm"
@@ -34,6 +34,7 @@
 <script lang='ts'>
     import { localeIncludes, localeStart } from '@/helpers/node_gm'
     import { defineComponent, PropType } from 'vue'
+    import { uniqBy } from 'lodash'
 
     export interface InputTextSuggestion {
         name: string
@@ -64,7 +65,7 @@
                 if (!this.suggestions) return []
                 const byStart = this.suggestions.filter((el) => this.value ? localeStart(el.name, this.value) : true)
                 const byInclude = this.suggestions.filter((el) => this.value ? localeIncludes(el.name, this.value) : true)
-                return [...byStart, ...byInclude]
+                return uniqBy([...byStart, ...byInclude], 'value')
             },
         },
         methods: {

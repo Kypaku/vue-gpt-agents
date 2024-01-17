@@ -1,6 +1,6 @@
 # Vue GPT Agents
 
-![](https://i.ibb.co/NWPFvcD/image-2024-01-12-17-44-12.png)
+![](https://i.ibb.co/JjBLtvj/GPTAgents.png)
 
 ## Environment
 

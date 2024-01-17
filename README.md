@@ -3,7 +3,9 @@
 ![](https://i.ibb.co/NWPFvcD/image-2024-01-12-17-44-12.png)
 
 ## Environment
+
 Node 16.19
+
 VueCli 4
 
 ## Project setup

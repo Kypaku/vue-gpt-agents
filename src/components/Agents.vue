@@ -4,7 +4,7 @@
             <template #default="{item}">
                 <div @click="$router.push('/agents/' + item.id)" :class="{active: item.id === $route.params.id}">
                     <router-link :to="'/agents/' + item.id" class="mt-1mr-2">{{ item.name }}</router-link>
-                    <button @click.stop="toggleAgentState(item)" class="py-1 px-2 bg-blue-800 toggle-button text-sm rounded mt-2 ml-2">{{ item.state !== 'running' ? '▶️' : '⏹️' }}</button>
+                    <!-- <button @click.stop="toggleAgentState(item)" class="py-1 px-2 bg-blue-800 toggle-button text-sm rounded mt-2 ml-2">{{ item.state !== 'running' ? '▶️' : '⏹️' }}</button> -->
                 </div>
             </template>
             <template #add>
@@ -55,6 +55,7 @@
                 const agent = addAgent({ name: this.name, goal: this.goal, id: '-1', state: 'pending' })
                 addMessage(agent.id, { message: 'Agent added', date: +new Date() })
                 this.$root.agents.push(agent.id)
+                location.reload()
                 // const agent = new AutonomousAgent(
                 //     this.name.trim(),
                 //     this.goal.trim(),

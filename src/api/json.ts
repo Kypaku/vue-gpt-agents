@@ -1,5 +1,5 @@
 
-import { appendFileJSON, readFileJSON, readFileJSONLines, updateFileJSON, writeFile } from '@/helpers/node_gm'
+import { appendFileJSON, existFile, readFileJSON, readFileJSONLines, updateFileJSON, writeFile } from '@/helpers/node_gm'
 import { IAgent } from '@/types'
 import * as path from 'path'
 
@@ -29,6 +29,9 @@ export function updateAgent(agent: Partial<IAgent>) {
 }
 
 export function getAgents(): IAgent[] {
+    if (!existFile(agentsFile)) {
+        return []
+    }
     return readFileJSON(agentsFile)
 }
 

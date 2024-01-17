@@ -1,4 +1,6 @@
-# vue-gpt-agents
+# Vue GPT Agents
+
+![](https://i.ibb.co/NWPFvcD/image-2024-01-12-17-44-12.png)
 
 ## Project setup
 ```

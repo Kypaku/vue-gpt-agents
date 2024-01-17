@@ -10,6 +10,7 @@ Node 16.19
 VueCli 4
 
 ## Project setup
+
 ```
 git clone https://github.com/Kypaku/vue-gpt-agents
 ```

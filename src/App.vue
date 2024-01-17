@@ -53,7 +53,6 @@
         height: 100vh;
     }
 
-
 </style>
 
 <style lang="scss">

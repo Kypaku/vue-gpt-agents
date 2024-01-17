@@ -1,6 +1,6 @@
 <template>
     <div class="the-header bg-gray-700">
-        {{ $route.fullPath }}
+        <!-- {{ $route.fullPath }} -->
     </div>
 </template>
 

@@ -29,4 +29,16 @@ npm run electron:serve
 npm run electron:build
 ```
 
+## How to Use
+
+### OpenAI API Key
+
+### Create an agent
+
+### Setup the goal
+
+### Settings
+
+### Log
+
 The project inspired by https://github.com/reworkd/AgentGPT

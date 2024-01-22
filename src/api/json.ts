@@ -1,5 +1,5 @@
 
-import { appendFileJSON, readFileJSON, readFileJSONLines, updateFileJSON, writeFile } from '@/helpers/node_gm'
+import { appendFileJSON, createDirectory, existFile, readFileJSON, readFileJSONLines, updateFileJSON, writeFile } from '@/helpers/node_gm'
 import { IAgent } from '@/types'
 import * as path from 'path'
 
@@ -9,6 +9,15 @@ export const agentsDir = path.resolve(DB_DIR, 'agents')
 
 export function addAgent(agent: IAgent): IAgent {
     const newAgent = {...agent, id: Math.random() + '' + +new Date()}
+    if (!existFile(DB_DIR)) {
+        createDirectory(DB_DIR)
+    }
+    if (!existFile(agentsDir)) {
+        createDirectory(agentsDir)
+    }
+    if (!existFile(agentsFile)) {
+        writeFile(agentsFile, '[]')
+    }
     updateFileJSON(agentsFile, (agents: IAgent[]) => {
         agents.push(newAgent)
         return agents
@@ -29,6 +38,9 @@ export function updateAgent(agent: Partial<IAgent>) {
 }
 
 export function getAgents(): IAgent[] {
+    if (!existFile(agentsFile)) {
+        return []
+    }
     return readFileJSON(agentsFile)
 }
 

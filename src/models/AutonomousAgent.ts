@@ -292,19 +292,20 @@ class AutonomousAgent {
 
     writeFile(path: string, content: string) {
         // check if the agent is allowed to write files
-        if (!this.agent.settings.allowWrite) {
-            this.sendErrorMessage(`errors.agent-not-allowed-to-write`)
-            return
-        }
-        // check if file is in the allowed directories (this.agent.settings.dirs) and if not, don't add it
-        if (!this.agent.settings.dirs.some((dir) => path.startsWith(dir))) {
-            this.sendErrorMessage(`errors.file-not-in-allowed-dirs: ` + path)
-            return
-        }
-        writeFile(path, handleContentBeforeWrite(path, content))
-        setTimeout(() => {
-            this.sendMessage({ type: "system", value: `File written: ${path}` })
-        }, 0)
+        this.sendMessage({ type: "system", value: `File write: the feature temporarily disabled` })
+        // if (!this.agent.settings.allowWrite) {
+        //     this.sendErrorMessage(`errors.agent-not-allowed-to-write`)
+        //     return
+        // }
+        // // check if file is in the allowed directories (this.agent.settings.dirs) and if not, don't add it
+        // if (!this.agent.settings.dirs.some((dir) => path.startsWith(dir))) {
+        //     this.sendErrorMessage(`errors.file-not-in-allowed-dirs: ` + path)
+        //     return
+        // }
+        // writeFile(path, handleContentBeforeWrite(path, content))
+        // setTimeout(() => {
+        //     this.sendMessage({ type: "system", value: `File written: ${path}` })
+        // }, 0)
     }
 
     getFileContent(path: string): string {

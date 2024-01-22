@@ -27,7 +27,9 @@
         <ToggleSwitch
             class="mt-2"
             label="Allow write access to files"
+            title="Temporarily disabled due to avoid unwanted changes to your files."
             :value="settings.allowWrite"
+            :disabled="true"
             @update:value="val => setSettings('allowWrite', val)" />
         <InputText
             class="mt-2"
@@ -41,14 +43,14 @@
             :value="settings.language"
             :placeholder="settings.language || defaultSettings.language"
             @update:value="val => setSettings('language', val)" />
-        <div class="dirs mt-4">
+        <!-- <div class="dirs mt-4">
             <b class="" >Allowed directories:</b>
             <List :addPlaceholder="'/path/to/dir'" :items="settings?.dirs || defaultSettings?.dirs || []" @add="({name, pos}) => setSettings('dirs', [name, ...(settings?.dirs || defaultSettings?.dirs || [])])">
                 <template #default="{item}">
                     {{ item  }}
                 </template>
             </List>
-        </div>
+        </div> -->
         <div class="tests">
             <b class="mt-4" >Tests:</b>
             <List :addPlaceholder="'npm run test'" :items="settings?.tests || defaultSettings?.tests || []" @add="({name, pos}) => setSettings('tests', [name, ...(settings?.tests || defaultSettings?.tests || [])])">

@@ -29,3 +29,4 @@ npm run electron:serve
 npm run electron:build
 ```
 
+The project inspired by https://github.com/reworkd/AgentGPT

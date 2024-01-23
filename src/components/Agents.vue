@@ -67,6 +67,9 @@
                 // )
             },
             toggleAgentState(agent) {
+                if (!agent) {
+                    return
+                }
                 if (agent.state === 'running') {
                     // Stop the agent
                     agent.agentInstance.stopAgent()

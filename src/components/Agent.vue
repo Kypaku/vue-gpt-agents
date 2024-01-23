@@ -1,5 +1,5 @@
 <template>
-    <div class="agent">
+    <div class="agent" v-if="agent">
         <div class="name">
             <div class="flex-center">
                 <InputText

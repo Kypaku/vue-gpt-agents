@@ -28,6 +28,11 @@ npm run electron:serve
 ```
 npm run electron:build
 ```
+ 
+## Possibilities
+Read links
+Read files
+Read file system
 
 ## How to Use
 
@@ -58,6 +63,5 @@ Goal: I am looking for low-carb healthy recipes that match my dietary restrictio
 ![](https://i.ibb.co/8bmR1Gc/image-2024-01-23-22-25-11.png)
 ### Settings
 ![](https://i.ibb.co/cwK68Q9/image.png)
-### Log
 
 The project inspired by https://github.com/reworkd/AgentGPT

@@ -22,6 +22,7 @@ async function createWindow () {
             enableRemoteModule: true,
             contextIsolation: false,
             nodeIntegration: true,
+            webSecurity: false,
         }
     })
     win.setMenuBarVisibility(false)

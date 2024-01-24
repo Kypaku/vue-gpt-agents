@@ -229,9 +229,9 @@ class AutonomousAgent {
 
     async handleTaskResult(task: ITask, taskResult: string) {
         !task.additionalInformation && (task.additionalInformation = {})
-        if (taskResult.trim() === AgentCommands.NEED_FILE_SYSTEM) {
+        if (taskResult.trim() === AgentCommands.NEED_FILE_SYSTEM && this.agent.settings.allowRead) {
             task.additionalInformation.fileSystem = this.getFileSystem()
-        } else if (!taskResult.indexOf(AgentCommands.NEED_FILE_CONTENT)) {
+        } else if (!taskResult.indexOf(AgentCommands.NEED_FILE_CONTENT) && this.agent.settings.allowRead) {
             const path = taskResult.split(AgentCommands.NEED_FILE_CONTENT + ':')[1]
             path && this.addFileToTask(path, task)
         } else if (!taskResult.indexOf(AgentCommands.WRITE_FILE_CONTENT)) {
@@ -239,7 +239,8 @@ class AutonomousAgent {
             const content = taskResult.split('\n').slice(1).join('\n')
             path && this.writeFile(path, content)
         } else if (!taskResult.indexOf(AgentCommands.NEED_URL_CONTENT)) {
-            const url = taskResult.split(':')[1]
+            console.log("NEED_URL_CONTENT", taskResult)
+            const url = taskResult.split(':').slice(1).join(':').trim()
             url && await this.addUrlToTask(url, task)
         } else if (!taskResult.indexOf(AgentCommands.INPUT + ':')) {
             !task.additionalInformation.fromUser && (task.additionalInformation.fromUser = [])
@@ -328,6 +329,7 @@ class AutonomousAgent {
             existingUrl.content = content
             return
         } else {
+            !task.additionalInformation.urls && (task.additionalInformation.urls = [])
             task.additionalInformation.urls.push({ url, content })
         }
     }

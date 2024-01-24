@@ -39,12 +39,15 @@ To get an API KEY you need to register new OPEN AI account and then visit https:
 1) FindMyStartup
 
 Goal: I'm looking for a unique startup idea in healthcare. I need a list of innovative ideas based on the latest trends and technological advancements. Also, I want a market analysis and an assessment of potential risks. Help me find a suitable idea to launch my business!
+
 2) LearnSmart
  
 Goal: I'm preparing for a programming exam and need a personalized study plan. Please compile a list of resources for me, including online courses, books, and practical assignments. Also, I need a schedule so I can study effectively and prepare well for the exam.
+
 3) EventPro
  
 Goal: I'm planning a corporate event for an IT company and looking for ideas for venues, thematic entertainment, and catering. I have a certain budget and a list of preferences from the client. Help me organize an unforgettable event, taking all these factors into account.
+
 4) HealthyChef
  
 Goal: I am looking for low-carb healthy recipes that match my dietary restrictions and taste preferences. I have access to certain ingredients. Please suggest personalized recipes that I can cook at home.

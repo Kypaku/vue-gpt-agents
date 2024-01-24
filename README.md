@@ -53,4 +53,4 @@ To get an API KEY you need to register new OPEN AI account and then visit https:
 
 ### Log
 
-The project inspired by https://gi)thub.com/reworkd/AgentGPT
+The project inspired by https://github.com/reworkd/AgentGPT

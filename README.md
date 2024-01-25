@@ -38,6 +38,12 @@ Read file system
 
 ## How to Use
 
+### :warning: Important Warning
+Experimental Agents with Extensive Access
+This project includes experimental agents capable of accessing any file and executing any URL. This functionality theoretically poses a risk of data leakage.
+
+It is highly recommended to run this application in a secure environment with limited permissions to mitigate potential risks.
+
 ### OpenAI API Key
 To get an API KEY you need to register new OPEN AI account and then visit https://platform.openai.com/account/api-keys
 
